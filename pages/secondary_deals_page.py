@@ -6,8 +6,6 @@ import logging
 from .base_page import BasePage
 
 class SecondaryDealsPage(BasePage):
-    SALE_TAG_LOCATOR = (By.XPATH, "//div[@wized='saleTagMLS' and text()='For sale']")
-
     def verify_on_page(self, expected_url):
         """
         Verify the current URL is the expected URL for the Secondary deals page.
@@ -60,7 +58,22 @@ class SecondaryDealsPage(BasePage):
         """
         Verify all displayed cards have a 'for sale' tag.
         """
-        cards = self.wait_for_elements(By.CLASS_NAME, 'card')
-        for card in cards:
-            tag_element = card.find_element(*self.SALE_TAG_LOCATOR)
-            assert tag_element.text == 'For sale', f"Expected 'For sale' tag but got {tag_element.text}"
+        try:
+            # Scroll down the page to load all cards
+            last_height = self.driver.execute_script("return document.body.scrollHeight")
+            while True:
+                self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                time.sleep(2)  # wait for new elements to load
+                new_height = self.driver.execute_script("return document.body.scrollHeight")
+                if new_height == last_height:
+                    break
+                last_height = new_height
+
+            cards = self.wait_for_elements(By.CSS_SELECTOR, 'div[wized="listingCardMLS"]')
+            for card in cards:
+                tag_element = card.find_element(By.XPATH, ".//div[@wized='saleTagMLS']")
+                assert tag_element.text == 'For sale', f"Expected 'For sale' tag but got {tag_element.text}"
+        except TimeoutException:
+            logging.error("Elements not found: div[wized='listingCardMLS']")
+            self.driver.save_screenshot("cards_not_found.png")
+            raise

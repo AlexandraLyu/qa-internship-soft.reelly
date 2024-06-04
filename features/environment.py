@@ -16,6 +16,7 @@ def browser_init(context):
     context.driver.maximize_window()
     context.driver.implicitly_wait(4)
     context.wait = WebDriverWait(context.driver, timeout=15)
+    context.driver.set_window_size(2560, 1440)
 
     context.app = Application(context.driver)
 

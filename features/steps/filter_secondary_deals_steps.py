@@ -1,4 +1,5 @@
 from behave import *
+from time import sleep
 
 
 @given('the user is on the main page')
@@ -23,10 +24,12 @@ def step_impl(context):
 
 @when('the user filters the products by "want to sell"')
 def step_impl(context):
+    sleep(10)
     context.app.secondary_deals_page.filter_by_want_to_sell()
 
 
 @then('the user verifies all cards have a "for sale" tag')
 def step_impl(context):
+    sleep(20)
     context.app.secondary_deals_page.verify_all_cards_have_for_sale_tag()
 
