@@ -1,51 +1,54 @@
-import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, ElementNotInteractableException
 import logging
 from .base_page import BasePage
+import time
 
 class SecondaryDealsPage(BasePage):
-    def verify_on_page(self, expected_url):
-        """
-        Verify the current URL is the expected URL for the Secondary deals page.
-        """
+    SECONDARY_OPTION = (By.CSS_SELECTOR, "a.menu-project.open.w--current[href='/secondary-listings'][aria-current='page']")
+
+    def verify_on_page(self):
         try:
-            self.wait.until(EC.url_to_be(expected_url))
-            assert self.driver.current_url == expected_url, f"Expected URL to be {expected_url} but got {self.driver.current_url}"
+            time.sleep(20)  # Adding a sleep to wait for the page to fully load
+            self.wait_for_element(*self.SECONDARY_OPTION)
+            logging.info(f"Successfully found the secondary deals element.")
         except TimeoutException:
-            current_url = self.driver.current_url
-            logging.error(f"Failed to navigate to URL: {expected_url}, current URL: {current_url}")
-            self.driver.save_screenshot("url_verification_failed.png")
+            logging.error(f"Failed to find the secondary deals element.")
+            self.driver.save_screenshot("element_verification_failed.png")
+            with open("page_source.html", "w", encoding="utf-8") as f:
+                f.write(self.driver.page_source)
+            logs = self.driver.get_log('browser')
+            with open("console.log", "w") as log_file:
+                for entry in logs:
+                    log_file.write(f"{entry['level']}: {entry['message']}\n")
             raise
 
     def filter_by_want_to_sell(self):
-        """
-        Apply the 'want to sell' filter on the Secondary deals page.
-        """
         try:
-            # Click on the Filters button
             self.wait_for_element(By.XPATH, "//div[text()='Filters']").click()
+            logging.info("Clicked on the Filters button.")
 
-            # Wait until the 'Want to sell' option is clickable
-            want_to_sell_option = self.wait.until(EC.element_to_be_clickable((By.XPATH, "//div[text()='Want to sell']")))
+            want_to_sell_option = self.wait.until(
+                EC.element_to_be_clickable((By.XPATH, "//div[text()='Want to sell']"))
+            )
+            logging.info("Found 'Want to sell' option.")
 
-            # Add a short delay to ensure stability
-            time.sleep(1)
-
-            # Click on the 'Want to sell' option
             want_to_sell_option.click()
+            logging.info("Clicked on the 'Want to sell' option.")
 
-            # Scroll down to locate the 'Apply filter' button
-            apply_filter_button = self.wait_for_element(By.XPATH, "//a[@wized='applyFilterButtonMLS' and text()='Apply filter']")
+            apply_filter_button = self.wait_for_element(By.XPATH,
+                                                        "//a[@wized='applyFilterButtonMLS' and text()='Apply filter']")
             self.driver.execute_script("arguments[0].scrollIntoView(true);", apply_filter_button)
+            logging.info("Scrolled to 'Apply filter' button.")
 
-            # Ensure the button is visible and interactable before clicking
-            self.wait.until(EC.element_to_be_clickable((By.XPATH, "//a[@wized='applyFilterButtonMLS' and text()='Apply filter']")))
+            self.wait.until(
+                EC.element_to_be_clickable((By.XPATH, "//a[@wized='applyFilterButtonMLS' and text()='Apply filter']"))
+            )
 
-            # Click on the 'Apply filter' button using JavaScript if necessary
             try:
                 apply_filter_button.click()
+                logging.info("Clicked on the 'Apply filter' button.")
             except ElementNotInteractableException:
                 logging.warning("Element not interactable via normal click, using JavaScript click.")
                 self.driver.execute_script("arguments[0].click();", apply_filter_button)
@@ -55,24 +58,23 @@ class SecondaryDealsPage(BasePage):
             raise e
 
     def verify_all_cards_have_for_sale_tag(self):
-        """
-        Verify all displayed cards have a 'for sale' tag.
-        """
         try:
-            # Scroll down the page to load all cards
             last_height = self.driver.execute_script("return document.body.scrollHeight")
             while True:
                 self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                time.sleep(2)  # wait for new elements to load
+                self.wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'div[wized="listingCardMLS"]')))
                 new_height = self.driver.execute_script("return document.body.scrollHeight")
                 if new_height == last_height:
                     break
                 last_height = new_height
+            logging.info("Scrolled to the bottom of the page to load all cards.")
 
             cards = self.wait_for_elements(By.CSS_SELECTOR, 'div[wized="listingCardMLS"]')
+            logging.info(f"Found {len(cards)} cards on the page.")
             for card in cards:
                 tag_element = card.find_element(By.XPATH, ".//div[@wized='saleTagMLS']")
                 assert tag_element.text == 'For sale', f"Expected 'For sale' tag but got {tag_element.text}"
+            logging.info("All cards have 'For sale' tags.")
         except TimeoutException:
             logging.error("Elements not found: div[wized='listingCardMLS']")
             self.driver.save_screenshot("cards_not_found.png")

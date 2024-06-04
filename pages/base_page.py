@@ -1,13 +1,21 @@
 import logging
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
 class BasePage:
-    def __init__(self, driver):
-        self.driver = driver
-        self.wait = WebDriverWait(driver, 20)  # Increased wait time
+    def __init__(self, headless=True):
+        options = webdriver.ChromeOptions()
+        if headless:
+            options.add_argument("--headless")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--window-size=1920x1080")
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+        self.driver = webdriver.Chrome(options=options)
+        self.wait = WebDriverWait(self.driver, 20)  # Increased wait time
 
     def wait_for_element(self, by, value):
         try:
@@ -32,3 +40,6 @@ class BasePage:
             with open("page_source.html", "w", encoding="utf-8") as f:
                 f.write(self.driver.page_source)
             raise
+
+    def close(self):
+        self.driver.quit()
