@@ -5,12 +5,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
+
 class BasePage:
-    def __init__(self, headless=True):
-        options = webdriver.ChromeOptions()
-        if headless:
-            options.add_argument("--headless")
-        self.driver = webdriver.Chrome(options=options)
+    def __init__(self, driver):
+        self.driver = driver
         self.wait = WebDriverWait(self.driver, 20)  # Increased wait time
 
     def wait_for_element(self, by, value):
@@ -36,6 +34,3 @@ class BasePage:
             with open("page_source.html", "w", encoding="utf-8") as f:
                 f.write(self.driver.page_source)
             raise
-
-    def close(self):
-        self.driver.quit()

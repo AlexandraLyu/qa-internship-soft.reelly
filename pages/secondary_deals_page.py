@@ -3,7 +3,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, ElementNotInteractableException
 import logging
-from .base_page import BasePage
+from pages.base_page import BasePage
+
 
 class SecondaryDealsPage(BasePage):
     def verify_on_page(self, expected_url):
@@ -31,7 +32,8 @@ class SecondaryDealsPage(BasePage):
             filters_button.click()
 
             # Wait until the 'Want to sell' option is clickable
-            want_to_sell_option = self.wait.until(EC.element_to_be_clickable((By.XPATH, "//div[text()='Want to sell']")))
+            want_to_sell_option = self.wait.until(
+                EC.element_to_be_clickable((By.XPATH, "//div[text()='Want to sell']")))
 
             # Add a short delay to ensure stability
             time.sleep(1)
@@ -40,11 +42,13 @@ class SecondaryDealsPage(BasePage):
             want_to_sell_option.click()
 
             # Scroll down to locate the 'Apply filter' button
-            apply_filter_button = self.wait_for_element(By.XPATH, "//a[@wized='applyFilterButtonMLS' and text()='Apply filter']")
+            apply_filter_button = self.wait_for_element(By.XPATH,
+                                                        "//a[@wized='applyFilterButtonMLS' and text()='Apply filter']")
             self.driver.execute_script("arguments[0].scrollIntoView(true);", apply_filter_button)
 
             # Ensure the button is visible and interactable before clicking
-            self.wait.until(EC.element_to_be_clickable((By.XPATH, "//a[@wized='applyFilterButtonMLS' and text()='Apply filter']")))
+            self.wait.until(
+                EC.element_to_be_clickable((By.XPATH, "//a[@wized='applyFilterButtonMLS' and text()='Apply filter']")))
 
             # Click on the 'Apply filter' button using JavaScript if necessary
             try:

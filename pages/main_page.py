@@ -1,5 +1,6 @@
 from selenium.webdriver.common.by import By
-from .base_page import BasePage
+from pages.base_page import BasePage
+
 
 class MainPage(BasePage):
     EMAIL_INPUT = (By.CSS_SELECTOR, 'input.input.w-input[name="email-2"][type="email"][id="email-2"]')

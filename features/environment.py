@@ -1,6 +1,6 @@
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.firefox.service import Service as FirefoxService
+from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver.support.wait import WebDriverWait
 from app.application import Application
 
@@ -10,9 +10,9 @@ def browser_init(context, headless):
     :param context: Behave context
     :param headless: Run the browser in headless mode if True
     """
-    driver_path = ChromeDriverManager().install()
-    service = Service(driver_path)
-    options = webdriver.ChromeOptions()
+    driver_path = GeckoDriverManager().install()
+    service = FirefoxService(driver_path)
+    options = webdriver.FirefoxOptions()
 
     if headless:
         options.add_argument("--headless")
@@ -25,22 +25,38 @@ def browser_init(context, headless):
     options.add_argument("--v=1")
     options.add_argument("--disable-extensions")
 
-    context.driver = webdriver.Chrome(service=service, options=options)
+    context.driver = webdriver.Firefox(service=service, options=options)
     context.driver.maximize_window()
     context.driver.implicitly_wait(4)
     context.wait = WebDriverWait(context.driver, timeout=15)
 
     context.app = Application(context.driver)
 
+    # Uncomment the following lines to use Chrome instead of Firefox
+    # driver_path = ChromeDriverManager().install()
+    # service = Service(driver_path)
+    # options = webdriver.ChromeOptions()
+    # if headless:
+    #     options.add_argument("--headless")
+    #     options.add_argument("--disable-gpu")
+    #     options.add_argument("--window-size=2560x1440")
+    #     options.add_argument("--no-sandbox")
+    #     options.add_argument("--disable-dev-shm-usage")
+    # options.add_argument("--enable-logging")
+    # options.add_argument("--v=1")
+    # options.add_argument("--disable-extensions")
+    # context.driver = webdriver.Chrome(service=service, options=options)
+    # context.driver.maximize_window()
+    # context.driver.implicitly_wait(4)
+    # context.wait = WebDriverWait(context.driver, timeout=15)
+    # context.app = Application(context.driver)
 
 def before_scenario(context, scenario):
     print('\nStarted scenario: ', scenario.name)
     browser_init(context, headless=True)  # Try non-headless for debugging
 
-
 def before_step(context, step):
     print('\nStarted step: ', step)
-
 
 def after_step(context, step):
     if step.status == 'failed':
