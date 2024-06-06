@@ -4,7 +4,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.wait import WebDriverWait
 from app.application import Application
 
-def browser_init(context, headless=False):
+
+def browser_init(context, headless):
     """
     :param context: Behave context
     :param headless: Run the browser in headless mode if True
@@ -12,6 +13,7 @@ def browser_init(context, headless=False):
     driver_path = ChromeDriverManager().install()
     service = Service(driver_path)
     options = webdriver.ChromeOptions()
+
     if headless:
         options.add_argument("--headless")
         options.add_argument("--disable-gpu")
@@ -27,16 +29,18 @@ def browser_init(context, headless=False):
     context.driver.maximize_window()
     context.driver.implicitly_wait(4)
     context.wait = WebDriverWait(context.driver, timeout=15)
-    context.driver.set_window_size(2560, 1440)
 
     context.app = Application(context.driver)
 
+
 def before_scenario(context, scenario):
     print('\nStarted scenario: ', scenario.name)
-    browser_init(context, headless=False)  # Try non-headless for debugging
+    browser_init(context, headless=True)  # Try non-headless for debugging
+
 
 def before_step(context, step):
     print('\nStarted step: ', step)
+
 
 def after_step(context, step):
     if step.status == 'failed':
@@ -49,6 +53,7 @@ def after_step(context, step):
         with open(f"{step.name}_console.log", "w") as log_file:
             for entry in logs:
                 log_file.write(f"{entry['level']}: {entry['message']}\n")
+
 
 def after_scenario(context, scenario):
     context.driver.delete_all_cookies()

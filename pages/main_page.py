@@ -16,3 +16,5 @@ class MainPage(BasePage):
 
     def click_secondary_option(self):
         self.wait_for_element(By.LINK_TEXT, 'Secondary').click()
+        current_url = self.driver.current_url
+        print("current url: ", current_url)
