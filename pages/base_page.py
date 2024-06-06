@@ -23,6 +23,18 @@ class BasePage:
                 f.write(self.driver.page_source)
             raise
 
+    def wait_for_element_clickable_click(self, by, value):
+        try:
+            element = self.wait.until(EC.element_to_be_clickable((by, value)))
+            logging.info(f"Element found: {by}={value}")
+            return element.click()
+        except TimeoutException:
+            logging.error(f"Element not found: {by}={value}")
+            self.driver.save_screenshot("element_not_found.png")
+            with open("page_source.html", "w", encoding="utf-8") as f:
+                f.write(self.driver.page_source)
+            raise
+
     def wait_for_elements(self, by, value):
         try:
             elements = self.wait.until(EC.presence_of_all_elements_located((by, value)))

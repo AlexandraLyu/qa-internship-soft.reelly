@@ -24,14 +24,12 @@ def step_impl(context):
 # @then('the user should be on the Secondary deals page')
 def step_impl(context):
     logging.info("Waiting for the page to load before verifying the Secondary deals page.")
-    time.sleep(20)  # Adding a sleep to wait for the page to fully load
     logging.info("Verifying the user is on the Secondary deals page.")
     context.app.secondary_deals_page.verify_on_page()
 
 
 @when('the user filters the products by "want to sell"')
 def step_impl(context):
-    time.sleep(10)
     logging.info("Filtering the products by 'want to sell'.")
     context.app.secondary_deals_page.filter_by_want_to_sell()
 

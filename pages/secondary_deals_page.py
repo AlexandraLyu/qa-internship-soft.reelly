@@ -29,6 +29,7 @@ class SecondaryDealsPage(BasePage):
             filters_button = self.wait.until(EC.element_to_be_clickable(
                 (By.XPATH, "//div[@class='filter-button']")))
             print(f"Filters button found: {filters_button}")
+            time.sleep(2)
             filters_button.click()
 
             # Wait until the 'Want to sell' option is clickable

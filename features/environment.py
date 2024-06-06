@@ -16,14 +16,11 @@ def browser_init(context, headless):
 
     if headless:
         options.add_argument("--headless")
-        options.add_argument("--disable-gpu")
         options.add_argument("--window-size=2560x1440")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
 
-    options.add_argument("--enable-logging")
-    options.add_argument("--v=1")
-    options.add_argument("--disable-extensions")
+    # options.add_argument("--enable-logging")
+    # options.add_argument("--v=1")
+    # options.add_argument("--disable-extensions")
 
     context.driver = webdriver.Firefox(service=service, options=options)
     context.driver.maximize_window()
@@ -51,12 +48,15 @@ def browser_init(context, headless):
     # context.wait = WebDriverWait(context.driver, timeout=15)
     # context.app = Application(context.driver)
 
+
 def before_scenario(context, scenario):
     print('\nStarted scenario: ', scenario.name)
     browser_init(context, headless=True)  # Try non-headless for debugging
 
+
 def before_step(context, step):
     print('\nStarted step: ', step)
+
 
 def after_step(context, step):
     if step.status == 'failed':
