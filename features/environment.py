@@ -1,76 +1,40 @@
 from selenium import webdriver
-from selenium.webdriver.firefox.service import Service as FirefoxService
-from webdriver_manager.firefox import GeckoDriverManager
-from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.chrome.options import Options
 from app.application import Application
 
 
-def browser_init(context, headless):
-    """
-    :param context: Behave context
-    :param headless: Run the browser in headless mode if True
-    """
-    driver_path = GeckoDriverManager().install()
-    service = FirefoxService(driver_path)
-    options = webdriver.FirefoxOptions()
-
-    if headless:
-        options.add_argument("--headless")
-        options.add_argument("--window-size=2560x1440")
-
-    # options.add_argument("--enable-logging")
-    # options.add_argument("--v=1")
-    # options.add_argument("--disable-extensions")
-
-    context.driver = webdriver.Firefox(service=service, options=options)
-    context.driver.maximize_window()
-    context.driver.implicitly_wait(4)
-    context.wait = WebDriverWait(context.driver, timeout=15)
-
-    context.app = Application(context.driver)
-
-    # Uncomment the following lines to use Chrome instead of Firefox
-    # driver_path = ChromeDriverManager().install()
-    # service = Service(driver_path)
-    # options = webdriver.ChromeOptions()
-    # if headless:
-    #     options.add_argument("--headless")
-    #     options.add_argument("--disable-gpu")
-    #     options.add_argument("--window-size=2560x1440")
-    #     options.add_argument("--no-sandbox")
-    #     options.add_argument("--disable-dev-shm-usage")
-    # options.add_argument("--enable-logging")
-    # options.add_argument("--v=1")
-    # options.add_argument("--disable-extensions")
-    # context.driver = webdriver.Chrome(service=service, options=options)
-    # context.driver.maximize_window()
-    # context.driver.implicitly_wait(4)
-    # context.wait = WebDriverWait(context.driver, timeout=15)
-    # context.app = Application(context.driver)
+def before_all(context):
+    context.browserstack_user = 'alexandralyubche_cX943G'
+    context.browserstack_key = 'YhDcZ7qrS1WzpxBpHp4B'
 
 
 def before_scenario(context, scenario):
-    print('\nStarted scenario: ', scenario.name)
-    browser_init(context, headless=True)  # Try non-headless for debugging
+    # Initialize the WebDriver with BrowserStack options
+    options = Options()
+    options.browser_version = 'latest'
+    options.platform_name = 'OS X Big Sur'
 
+    bstack_options = {
+        'os': 'OS X',
+        'osVersion': 'Big Sur',
+        'browserName': 'chrome',
+        'browserVersion': 'latest',
+        'sessionName': scenario.name,
+    }
+    options.set_capability('bstack:options', bstack_options)
 
-def before_step(context, step):
-    print('\nStarted step: ', step)
+    bs_url = f'http://{context.browserstack_user}:{context.browserstack_key}@hub-cloud.browserstack.com/wd/hub'
+    context.driver = webdriver.Remote(
+        command_executor=bs_url,
+        options=options
+    )
+    context.driver.set_window_size(1024, 768)
 
-
-def after_step(context, step):
-    if step.status == 'failed':
-        print('\nStep failed: ', step)
-        context.driver.save_screenshot(f"{step.name}_failed.png")
-        with open(f"{step.name}_failed.html", "w", encoding="utf-8") as f:
-            f.write(context.driver.page_source)
-        # Capture console logs
-        logs = context.driver.get_log('browser')
-        with open(f"{step.name}_console.log", "w") as log_file:
-            for entry in logs:
-                log_file.write(f"{entry['level']}: {entry['message']}\n")
+    # Initialize the Application object with the WebDriver
+    context.app = Application(context.driver)
 
 
 def after_scenario(context, scenario):
-    context.driver.delete_all_cookies()
-    context.driver.quit()
+    # Quit the WebDriver after each scenario
+    if hasattr(context, 'driver'):
+        context.driver.quit()
