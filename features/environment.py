@@ -1,8 +1,10 @@
-import os
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from allure_behave.listener import AllureListener
 from behave.configuration import Configuration
 from behave.runner import Context, Runner
-
+from app.application import Application
+import subprocess
 
 def before_all(context: Context):
     context.browserstack_user = 'alexandralyubche_cX943G'
@@ -13,24 +15,26 @@ def before_all(context: Context):
     listener = AllureListener(config)
     context.config = config  # Ensure context has the config attribute
 
-
 def before_scenario(context: Context, scenario):
-    from selenium import webdriver
-    from selenium.webdriver.chrome.options import Options
-    from app.application import Application
-
-    # Initialize the WebDriver with BrowserStack options
     options = Options()
-    options.browser_version = 'latest'
-    options.platform_name = 'OS X Big Sur'
+    if 'mobile' in scenario.tags:
+        # Initialize the WebDriver with BrowserStack options for a Pixel 5 device
+        bstack_options = {
+            'deviceName': 'Google Pixel 5',
+            'realMobile': 'true',
+            'osVersion': '11.0',
+            'sessionName': scenario.name  # Using the scenario name as the session name
+        }
+    else:
+        # Initialize the WebDriver with BrowserStack options for a desktop environment
+        bstack_options = {
+            'os': 'OS X',
+            'osVersion': 'Big Sur',
+            'browserName': 'chrome',
+            'browserVersion': 'latest',
+            'sessionName': scenario.name  # Using the scenario name as the session name
+        }
 
-    bstack_options = {
-        'os': 'OS X',
-        'osVersion': 'Big Sur',
-        'browserName': 'chrome',
-        'browserVersion': 'latest',
-        'sessionName': scenario.name,  # Using the scenario name as the session name
-    }
     options.set_capability('bstack:options', bstack_options)
 
     bs_url = f'http://{context.browserstack_user}:{context.browserstack_key}@hub-cloud.browserstack.com/wd/hub'
@@ -38,7 +42,9 @@ def before_scenario(context: Context, scenario):
         command_executor=bs_url,
         options=options
     )
-    context.driver.set_window_size(1024, 768)
+
+    if 'mobile' not in scenario.tags:
+        context.driver.set_window_size(1024, 768)
 
     # Initialize the Application object with the WebDriver
     context.app = Application(context.driver)
@@ -52,5 +58,6 @@ def after_scenario(context: Context, scenario):
 
 def after_all(context: Context):
     allure_results_dir = 'allure-results'
-    os.system(f'allure generate {allure_results_dir} -o allure-report --clean')
-    os.system(f'allure open allure-report')
+    # Use subprocess to run shell commands instead of os.system
+    subprocess.run(['allure', 'generate', allure_results_dir, '-o', 'allure-report', '--clean'])
+    subprocess.run(['allure', 'open', 'allure-report'])

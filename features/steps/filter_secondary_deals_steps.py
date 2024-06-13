@@ -15,17 +15,17 @@ def step_impl(context):
     context.app.main_page.login('lybchevskaya@icloud.com', 'Abundance88!')
 
 
-@when('the user clicks on the "Secondary" option in the left side menu')
+@when('the user clicks on the "Secondary" option')
 def step_impl(context):
     logging.info("Clicking on the Secondary option.")
     context.app.main_page.click_secondary_option()
 
 
 # @then('the user should be on the Secondary deals page')
-def step_impl(context):
-    logging.info("Waiting for the page to load before verifying the Secondary deals page.")
-    logging.info("Verifying the user is on the Secondary deals page.")
-    context.app.secondary_deals_page.verify_on_page()
+# def step_impl(context):
+#     logging.info("Waiting for the page to load before verifying the Secondary deals page.")
+#     logging.info("Verifying the user is on the Secondary deals page.")
+#     # context.app.secondary_deals_page.verify_on_page()
 
 
 @when('the user filters the products by "want to sell"')
