@@ -3,10 +3,12 @@ from selenium.webdriver.common.by import By
 from pages.base_page import BasePage
 import logging
 
+
 class MainPage(BasePage):
-    EMAIL_INPUT = (By.CSS_SELECTOR, 'input.input.w-input[name="email-2"][type="email"][id="email-2"]')
+    EMAIL_INPUT = (By.ID, 'email-2')
     PASSWORD_INPUT = (By.ID, 'field')
-    CONTINUE_BUTTON = (By.XPATH, '//a[@class="login-button w-button" and text()="Continue"]')
+    CONTINUE_BUTTON = (By.XPATH, '//a[@wized="loginButton"]')
+    SECONDARY_BUTTON = (By.XPATH, '//div[text()="Secondary"]')
 
     def open(self, url):
         self.driver.get(url)
@@ -21,7 +23,7 @@ class MainPage(BasePage):
             self.wait_for_element(By.ID, 'field').send_keys(password)
             logging.info(f"Password input field found and password entered")
             sleep(2)
-            self.wait_for_element_clickable_click(By.CLASS_NAME, 'login-button')
+            self.wait_for_element_clickable_click(By.XPATH, '//a[@wized="loginButton"]')
             logging.info("Clicked on continue button")
             sleep(2)
             current_url = self.driver.current_url
@@ -33,7 +35,9 @@ class MainPage(BasePage):
 
     def click_secondary_option(self):
         try:
-            self.wait_for_element(By.XPATH, '//a[@href="/secondary-listings" and contains(@class, "menu-link") and .//div[@class="menu-text" and text()="Secondary"]]').click()
+            # self.wait_for_element(By.XPATH, '//a[@href="/secondary-listings"]').click()
+            elements = self.find_elements(*self.SECONDARY_BUTTON)
+            elements[1].click()
             current_url = self.driver.current_url
             print("current url: ", current_url)
         except Exception as e:

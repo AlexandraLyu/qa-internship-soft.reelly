@@ -11,6 +11,9 @@ class BasePage:
         self.driver = driver
         self.wait = WebDriverWait(self.driver, 20)  # Increased wait time
 
+    def find_elements(self, *locator):
+        return self.driver.find_elements(*locator)
+
     def wait_for_element(self, by, value):
         try:
             element = self.wait.until(EC.presence_of_element_located((by, value)))

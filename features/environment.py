@@ -1,63 +1,90 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver.chrome.options import Options
-from allure_behave.listener import AllureListener
-from behave.configuration import Configuration
-from behave.runner import Context, Runner
+from selenium.webdriver.support.wait import WebDriverWait
 from app.application import Application
-import subprocess
 
-def before_all(context: Context):
-    context.browserstack_user = 'alexandralyubche_cX943G'
-    context.browserstack_key = 'YhDcZ7qrS1WzpxBpHp4B'
 
-    # Allure configuration
-    config = Configuration()
-    listener = AllureListener(config)
-    context.config = config  # Ensure context has the config attribute
+def browser_init(context, scenario_name):
+    """
+    :param scenario_name:
+    :param context: Behave context
+    """
 
-def before_scenario(context: Context, scenario):
-    options = Options()
-    if 'mobile' in scenario.tags:
-        # Initialize the WebDriver with BrowserStack options for a Pixel 5 device
-        bstack_options = {
-            'deviceName': 'Google Pixel 5',
-            'realMobile': 'true',
-            'osVersion': '11.0',
-            'sessionName': scenario.name  # Using the scenario name as the session name
-        }
-    else:
-        # Initialize the WebDriver with BrowserStack options for a desktop environment
-        bstack_options = {
-            'os': 'OS X',
-            'osVersion': 'Big Sur',
-            'browserName': 'chrome',
-            'browserVersion': 'latest',
-            'sessionName': scenario.name  # Using the scenario name as the session name
-        }
+    # ## CHROME Browser #
+    # driver_path = ChromeDriverManager().install()
+    # service = Service(driver_path)
+    # context.driver = webdriver.Chrome(service=service)
 
-    options.set_capability('bstack:options', bstack_options)
+    ##  FIREFOX Browser #
+    # driver_path = GeckoDriverManager().install()
+    # service = Service(driver_path)
+    # context.driver = webdriver.Firefox(service=service)
 
-    bs_url = f'http://{context.browserstack_user}:{context.browserstack_key}@hub-cloud.browserstack.com/wd/hub'
-    context.driver = webdriver.Remote(
-        command_executor=bs_url,
-        options=options
-    )
+    ## SAFARI Browser #
+    # context.driver = webdriver.Safari()
 
-    if 'mobile' not in scenario.tags:
-        context.driver.set_window_size(1024, 768)
+    # HEADLESS MODE
+    # options = webdriver.ChromeOptions()
+    # options.add_argument('--headless')
+    # options.add_argument('--window--size=1920*1080')
+    # service = Service(ChromeDriverManager().install())
+    # context.driver = webdriver.Chrome(
+    #     options=options,
+    #     service=service
+    # )
+    # driver.set_window_size(1920, 1080)
 
-    # Initialize the Application object with the WebDriver
+    # BROWSERSTACK #|
+
+    # bs_user = 'alexandralyubche_cX943G'
+    # bs_key = 'YhDcZ7qrS1WzpxBpHp4B'
+    # url = f'http://{bs_user}:{bs_key}@hub-cloud.browserstack.com/wd/hub'
+    # options = Options()
+    # bstack_options = {
+    #     'deviceName': 'Google Pixel 5',
+    #     'realMobile': 'true',
+    #     'osVersion': '11.0',
+    #     'sessionName': scenario_name
+    # }
+    # options.set_capability('bstack:options', bstack_options)
+    # context.driver = webdriver.Remote(command_executor=url, options=options)
+
+    mobile_emulation = {
+        "deviceMetrics": {"width": 360, "height": 540, "pixelRatio": 3.0},
+        "userAgent": "Mozilla/5.0 (Linux; Android 4.2.1; en-us; Nexus 5 Build/JOP40D) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19",
+        "clientHints": {"platform": "Android", "mobile": True}}
+    chrome_options = Options()
+    chrome_options.add_experimental_option("mobileEmulation", mobile_emulation)
+    context.driver = webdriver.Chrome(options=chrome_options)
+
+    context.driver.set_window_size(1920, 1080)
+    context.driver.implicitly_wait(4)
+    context.wait = WebDriverWait(context.driver, 15)
     context.app = Application(context.driver)
+    # context.driver.maximize_window()
 
 
-def after_scenario(context: Context, scenario):
-    # Quit the WebDriver after each scenario
-    if hasattr(context, 'driver'):
-        context.driver.quit()
+def before_scenario(context, scenario):
+    print('\nStarted scenario: ', scenario.name)
+    # logger.info(f'Started scenario: {scenario.name}')
+    browser_init(context, scenario.name)
 
 
-def after_all(context: Context):
-    allure_results_dir = 'allure-results'
-    # Use subprocess to run shell commands instead of os.system
-    subprocess.run(['allure', 'generate', allure_results_dir, '-o', 'allure-report', '--clean'])
-    subprocess.run(['allure', 'open', 'allure-report'])
+def before_step(context, step):
+    # logger.info(f'Started step: {step}')
+    print('\nStarted step: ', step)
+
+
+def after_step(context, step):
+    if step.status == 'failed':
+        # Screenshot:
+        # context.driver.save_screenshot(f'step_failed_{step}.png')
+        print('\nStep failed: ', step)
+        # logger.error(f'Step failed: {step}')
+
+
+def after_scenario(context, feature):
+    context.driver.quit()
